@@ -1,0 +1,42 @@
+name: Pull Latest Changes and Extract tar.xz
+
+on:
+  push:
+    branches:
+      - main 
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  extract-tar-xz:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0 
+
+    - name: Pull latest changes from fork (if necessary)
+      run: |
+        git pull origin main 
+
+    - name: Extract tar.xz file
+      run: |
+        TAR_FILE_PATH="adressen.tar.xz"
+        EXTRACT_DIR="extracted_files"
+        
+        # Check if the file exists and unzip
+        if [ -f "$TAR_FILE_PATH" ]; then
+          echo "Extracting $TAR_FILE_PATH..."
+          mkdir -p $EXTRACT_DIR
+          tar -xf $TAR_FILE_PATH -C $EXTRACT_DIR
+        else
+          echo "$TAR_FILE_PATH not found!"
+          exit 1
+        fi
+
+    - name: List extracted files
+      run: |
+        ls -al extracted_files
