@@ -46,6 +46,11 @@ jobs:
       run: |
         TAR_GZ_PATH="adressen.tar.gz"
         
+        if [ ! -f "extracted_files/$(basename $CSV_FILE)" ]; then
+          echo "CSV file is missing in extracted_files, cannot compress!"
+          exit 1
+        fi
+        
         echo "Compressing extracted files into $TAR_GZ_PATH..."
         tar -czf $TAR_GZ_PATH -C extracted_files $(basename "$CSV_FILE")
 
