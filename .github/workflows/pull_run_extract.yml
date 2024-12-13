@@ -30,7 +30,7 @@ jobs:
 
     - name: Extract CSV from adressen.tar.xz with verbose output
       run: |
-        tar -xvvf adressen.tar.xz
+       tar -xvf adressen.tar.xz --to-stdout var/www/PersonalUtils/storage/repos/postcodes/data/adressen.csv > adressen.csv
 
     - name: List all extracted files
       run: |
@@ -38,7 +38,7 @@ jobs:
 
     - name: Compress CSV to tar.gz
       run: |
-        find . -name "adressen.csv" -exec tar -czvf adressen.tar.gz {} +
+        tar -czvf adressen.tar.gz adressen.csv
 
     - name: Generate Timestamp
       id: timestamp
