@@ -18,15 +18,8 @@ jobs:
     - name: Pull latest changes from fork (if necessary)
       run: |
         gh repo sync -b main
-
-    - name: List files in repository
-      run: |
-        pwd
-        ls -la
-
-    - name: Debugging tar contents
-      run: |
-        tar -tvf adressen.tar.xz
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Extract CSV from adressen.tar.xz with verbose output
       run: |
