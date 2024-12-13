@@ -1,72 +1,39 @@
-name: Convert tar.xz to tar.gz
+name: Extract and Release CSV
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0'
 
 jobs:
-  convert-and-release:
+  extract-and-release:
     runs-on: ubuntu-latest
-
+    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
-  
-    - name: Pull latest changes from fork
+
+    - name: Pull latest changes from fork (if necessary)
       run: |
         git pull origin main
 
-    - name: Extract tar.xz file
+    - name: Extract CSV from adressen.tar.xz
       run: |
-        TAR_XZ_PATH="adressen.tar.xz"
-        EXTRACT_DIR="extracted_files"
-        
-        if [ -f "$TAR_XZ_PATH" ]; then
-          echo "Extracting $TAR_XZ_PATH..."
-          mkdir -p $EXTRACT_DIR
-          tar -xf $TAR_XZ_PATH -C $EXTRACT_DIR
-        else
-          echo "$TAR_XZ_PATH not found!"
-          exit 1
-        fi
+        tar -xvf adressen.tar.xz --strip-components=5 var/www/PersonalUtils/storage/repos/postcodes/data/adressen.csv
 
-    - name: Move CSV file to root directory (flatten)
+    - name: Compress CSV to tar.gz
       run: |
-        CSV_FILE=$(find extracted_files -name "*.csv" | head -n 1)
-        echo "Found CSV file: $CSV_FILE"
-        mv "$CSV_FILE" extracted_files/
-        
-    - name: Convert tar.xz to tar.gz
-      run: |
-        TAR_GZ_PATH="adressen.tar.gz"
-        
-        if [ ! -f "extracted_files/$(basename $CSV_FILE)" ]; then
-          echo "CSV file is missing in extracted_files, cannot compress!"
-          exit 1
-        fi
-        
-        echo "Compressing extracted files into $TAR_GZ_PATH..."
-        tar -czf $TAR_GZ_PATH -C extracted_files $(basename "$CSV_FILE")
+        tar -czvf adressen.tar.gz adressen.csv
 
-    - name: Create GitHub Release
-      id: create_release
-      uses: softprops/action-gh-release@v1
+    - name: Generate Timestamp
+      id: timestamp
+      run: echo "timestamp=$(date +'%Y%m%d_%H%M%S')" >> $GITHUB_OUTPUT
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
       with:
-        files: $TAR_GZ_PATH
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Upload tar.gz file as release asset
-      if: success() && steps.create_release.outputs.upload_url != ''
-      run: |
-        release_url=${{ steps.create_release.outputs.upload_url }}
-        curl -XPOST -H "Authorization: token $GITHUB_TOKEN" \
-             -H "Content-Type: application/octet-stream" \
-             --data-binary @$TAR_GZ_PATH \
-             "$release_url?name=$(basename $TAR_GZ_PATH)"
+        files: adressen.tar.gz
+        name: CSV Release ${{ steps.timestamp.outputs.timestamp }}
+        tag_name: release-${{ steps.timestamp.outputs.timestamp }}
