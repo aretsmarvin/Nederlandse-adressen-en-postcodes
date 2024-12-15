@@ -22,12 +22,16 @@ jobs:
       run: git remote add upstream https://github.com/LJPc-solutions/Nederlandse-adressen-en-postcodes.git
 
     - name: Fetch upstream
-      run: git fetch upstream main
+      run: | 
+        git fetch upstream main
+        git checkout upstream/main -- adressen.tar.xz provincies.tar.xz
+        git add adressen.tar.xz provincies.tar.xz
 
-    - name: Merge upstream/main into main
-      run: |
-       git checkout main
-       git merge upstream/main --allow-unrelated-histories --no-edit || echo "No changes to merge"
+
+    #- name: Merge upstream/main into main
+    #  run: |
+    #   git checkout main
+    #   git merge upstream/main --allow-unrelated-histories --no-edit || echo "No changes to merge"
 
     - name: Push changes
       run: |
